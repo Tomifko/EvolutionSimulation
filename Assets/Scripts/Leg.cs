@@ -1,29 +1,33 @@
-using UnityEditor.Experimental.GraphView;
+using System.Numerics;
 using UnityEngine;
 
-public class Rameno : MonoBehaviour
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
+
+public class Leg : MonoBehaviour
 {
     public GameObject CreatureBody;
-
-    public Vector3 BodyJointPosition => new (CreatureBody.transform.position.x + (CreatureBody.transform.localScale.x / 2),
-                                             CreatureBody.transform.position.y + (CreatureBody.transform.localScale.y / 2), 
-                                             CreatureBody.transform.position.z );
-    public Vector3 ArmJointPosition;
+    public GameObject LegTarget;
+    public Vector3 BodyJointPosition => new ( CreatureBody.transform.position.x + (CreatureBody.transform.localScale.x / 2),
+                                              CreatureBody.transform.position.y + (CreatureBody.transform.localScale.y / 2), 
+                                              CreatureBody.transform.position.z );
     public Vector3 ArmEndPosition;
-
-    private Vector3 bodyJointArmEndMidPoint;
-
     public float LegSegmentLength = 1.0f;
-    public float MaxReachRange = 3.0f;
 
+    private Vector3 armJointPosition;
+    private Vector3 bodyJointArmEndMidPoint;
+    public Vector3 legTargetPoint;
     private float gizmosJointSize = 0.1f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         ArmEndPosition = new(CreatureBody.transform.position.x + 2f,
-                                         0f,
-                                         CreatureBody.transform.position.z);
+                             0f,
+                             CreatureBody.transform.position.z);
+
+        // Calculate position of the LegTargetPoint
+        legTargetPoint = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
 
         //var leg = CreateLegSegment("Leg1");
         //GameObject.Instantiate(leg);
@@ -48,9 +52,16 @@ public class Rameno : MonoBehaviour
 
         // Midpoint + HeightOfIsoscelesTriangle = position of the arm joint
         var baseLength = GetDistance(BodyJointPosition, ArmEndPosition);
-        ArmJointPosition = new Vector3(bodyJointArmEndMidPoint.x,
-                                        bodyJointArmEndMidPoint.y + GetHeightOfIsoscelesTriangle(LegSegmentLength, baseLength),
-                                        bodyJointArmEndMidPoint.z);
+        armJointPosition = new Vector3(bodyJointArmEndMidPoint.x,
+                                       bodyJointArmEndMidPoint.y + GetHeightOfIsoscelesTriangle(LegSegmentLength, baseLength),
+                                       bodyJointArmEndMidPoint.z);
+
+        var targetOffsetVector = new Vector3(2f, 0f, 0.75f);
+        legTargetPoint = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up) 
+            * targetOffsetVector
+            + new Vector3(CreatureBody.transform.position.x, 0, CreatureBody.transform.position.z);
+
+
     }
 
     Vector3 GetMidPoint(Vector3 firstPoint, Vector3 secondPoint)
@@ -90,14 +101,18 @@ public class Rameno : MonoBehaviour
         Gizmos.DrawSphere(bodyJointArmEndMidPoint, gizmosJointSize);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(ArmJointPosition, gizmosJointSize); // Draw arm joint
+        Gizmos.DrawSphere(armJointPosition, gizmosJointSize); // Draw arm joint
 
         Gizmos.color = Color.black;
         Gizmos.DrawSphere(ArmEndPosition, gizmosJointSize); // Draw end of arm with black
         Gizmos.DrawSphere(BodyJointPosition, gizmosJointSize); // Draw static joint attached to the creature body
 
         // Connect the joints with lines
-        Gizmos.DrawLine(BodyJointPosition, ArmJointPosition);
-        Gizmos.DrawLine(ArmJointPosition, ArmEndPosition);
+        Gizmos.DrawLine(BodyJointPosition, armJointPosition);
+        Gizmos.DrawLine(armJointPosition, ArmEndPosition);
+
+        // Draw legs target
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(legTargetPoint, gizmosJointSize);
     }
 }
