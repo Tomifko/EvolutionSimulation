@@ -3,30 +3,28 @@ using UnityEngine;
 public class Leg : MonoBehaviour
 {
     public GameObject CreatureBody;
-    public GameObject LegTarget;
     public Vector3 BodyJointPosition => new ( CreatureBody.transform.position.x + (CreatureBody.transform.localScale.x / 2),
                                               CreatureBody.transform.position.y + (CreatureBody.transform.localScale.y / 2), 
                                               CreatureBody.transform.position.z );
-    public Vector3 ArmEndPosition;
+    public Vector3 FootPosition;
     public float LegSegmentLength = 1.0f;
 
     private Vector3 armJointPosition;
     private Vector3 bodyJointArmEndMidPoint;
-    public Vector3 legTargetPoint;
+    public Vector3 footTargetPoint;
     private float gizmosJointSize = 0.1f;
+
+    private float footToFootTargetDistance;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        ArmEndPosition = new(CreatureBody.transform.position.x + 2f,
+        FootPosition = new(CreatureBody.transform.position.x + 2f,
                              0f,
                              CreatureBody.transform.position.z);
 
         // Calculate position of the LegTargetPoint
-        legTargetPoint = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
-
-
-
+        footTargetPoint = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
 
         //var leg = CreateLegSegment("Leg1");
         //GameObject.Instantiate(leg);
@@ -47,10 +45,10 @@ public class Leg : MonoBehaviour
     void Update()
     {
         // Get midpoint on triangle base
-        bodyJointArmEndMidPoint = GetMidPoint(BodyJointPosition, ArmEndPosition);
+        bodyJointArmEndMidPoint = GetMidPoint(BodyJointPosition, FootPosition);
 
         // Midpoint + HeightOfIsoscelesTriangle = position of the arm joint
-        var baseLength = GetDistance(BodyJointPosition, ArmEndPosition);
+        var baseLength = GetDistance(BodyJointPosition, FootPosition);
         armJointPosition = new Vector3(bodyJointArmEndMidPoint.x,
                                        bodyJointArmEndMidPoint.y + GetHeightOfIsoscelesTriangle(LegSegmentLength, baseLength),
                                        bodyJointArmEndMidPoint.z);
@@ -65,13 +63,13 @@ public class Leg : MonoBehaviour
 
         if ( Physics.Raycast(raycastStartPoint, Vector3.down, out var hit))
         {
-            print(Vector3.down * hit.distance);
 
             Debug.DrawRay(raycastStartPoint, Vector3.down * hit.distance, Color.yellow);
-            legTargetPoint = raycastStartPoint + Vector3.down * hit.distance;
+            footTargetPoint = raycastStartPoint + Vector3.down * hit.distance;
         }
 
-
+        footToFootTargetDistance = GetDistance(FootPosition, footTargetPoint);
+        print($"Distance: {footToFootTargetDistance},\nFootPosition: {FootPosition}\nfootTargetPoint: {footTargetPoint}");
 
     }
 
@@ -93,7 +91,7 @@ public class Leg : MonoBehaviour
         return Mathf.Sqrt(sideLength * sideLength - (baseLength * baseLength / 4));
     }
 
-    // d = ((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)1/2
+    // d = Sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
     float GetDistance(Vector3 firstPoint, Vector3 secondPoint)
     {
         var dstX = Mathf.Abs(firstPoint.x - secondPoint.x);
@@ -101,7 +99,7 @@ public class Leg : MonoBehaviour
         var dstZ = Mathf.Abs(firstPoint.z - secondPoint.z);
 
         var sum = dstX * dstX + dstY * dstY + dstZ * dstZ;
-        var d = Mathf.Pow(sum, 1/2);
+        var d = Mathf.Sqrt(sum);
         return d;
     }
 
@@ -115,15 +113,16 @@ public class Leg : MonoBehaviour
         Gizmos.DrawSphere(armJointPosition, gizmosJointSize); // Draw arm joint
 
         Gizmos.color = Color.black;
-        Gizmos.DrawSphere(ArmEndPosition, gizmosJointSize); // Draw end of arm with black
+        Gizmos.DrawSphere(FootPosition, gizmosJointSize); // Draw end of arm with black
         Gizmos.DrawSphere(BodyJointPosition, gizmosJointSize); // Draw static joint attached to the creature body
+        Gizmos.DrawLine(FootPosition, footTargetPoint); // Draw line between foot and its target
 
         // Connect the joints with lines
         Gizmos.DrawLine(BodyJointPosition, armJointPosition);
-        Gizmos.DrawLine(armJointPosition, ArmEndPosition);
+        Gizmos.DrawLine(armJointPosition, FootPosition);
 
         // Draw legs target
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(legTargetPoint, gizmosJointSize);
+        Gizmos.DrawSphere(footTargetPoint, gizmosJointSize);
     }
 }
