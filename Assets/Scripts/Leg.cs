@@ -1,8 +1,4 @@
-using System.Numerics;
 using UnityEngine;
-
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
 
 public class Leg : MonoBehaviour
 {
@@ -29,6 +25,9 @@ public class Leg : MonoBehaviour
         // Calculate position of the LegTargetPoint
         legTargetPoint = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
 
+
+
+
         //var leg = CreateLegSegment("Leg1");
         //GameObject.Instantiate(leg);
     }
@@ -38,7 +37,7 @@ public class Leg : MonoBehaviour
     //    GameObject segment = GameObject.CreatePrimitive(PrimitiveType.Capsule);
     //    segment.name = name;
     //    Destroy(segment.GetComponent<Collider>()); // Remove collider for simplicity
-        
+
     //    // We will scale and position these later
     //    segment.transform.localScale = new Vector3(0.1f, 1.0f, 0.1f); // Default thickness, height set later
     //    return segment;
@@ -57,9 +56,21 @@ public class Leg : MonoBehaviour
                                        bodyJointArmEndMidPoint.z);
 
         var targetOffsetVector = new Vector3(2f, 0f, 0.75f);
-        legTargetPoint = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up) 
+
+        // Raycast from from legTargetPoint, to move it up/down
+        var raycastStartPoint = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up)
             * targetOffsetVector
-            + new Vector3(CreatureBody.transform.position.x, 0, CreatureBody.transform.position.z);
+            + new Vector3(CreatureBody.transform.position.x, 0, CreatureBody.transform.position.z)
+            + Vector3.up * 5f;
+
+        if ( Physics.Raycast(raycastStartPoint, Vector3.down, out var hit))
+        {
+            print(Vector3.down * hit.distance);
+
+            Debug.DrawRay(raycastStartPoint, Vector3.down * hit.distance, Color.yellow);
+            legTargetPoint = raycastStartPoint + Vector3.down * hit.distance;
+        }
+
 
 
     }
