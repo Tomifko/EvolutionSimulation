@@ -3,18 +3,18 @@ using UnityEngine;
 public class Leg : MonoBehaviour
 {
     public GameObject CreatureBody;
-    public Vector3 BodyJointPosition => new ( CreatureBody.transform.position.x + (CreatureBody.transform.localScale.x / 2),
-                                              CreatureBody.transform.position.y + (CreatureBody.transform.localScale.y / 2), 
-                                              CreatureBody.transform.position.z );
+    public Vector3 BodyJointPosition => new(CreatureBody.transform.position.x + (CreatureBody.transform.localScale.x / 2),
+                                              CreatureBody.transform.position.y + (CreatureBody.transform.localScale.y / 2),
+                                              CreatureBody.transform.position.z);
     public Vector3 FootPosition;
+    public Vector3 FootTargetPosition;
     public float LegSegmentLength = 1.0f;
+    public float StepLength = 1.0f;
 
     private Vector3 armJointPosition;
     private Vector3 bodyJointArmEndMidPoint;
-    public Vector3 footTargetPoint;
     private float gizmosJointSize = 0.1f;
 
-    private float footToFootTargetDistance;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -24,7 +24,7 @@ public class Leg : MonoBehaviour
                              CreatureBody.transform.position.z);
 
         // Calculate position of the LegTargetPoint
-        footTargetPoint = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
+        FootTargetPosition = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
 
         //var leg = CreateLegSegment("Leg1");
         //GameObject.Instantiate(leg);
@@ -61,25 +61,26 @@ public class Leg : MonoBehaviour
             + new Vector3(CreatureBody.transform.position.x, 0, CreatureBody.transform.position.z)
             + Vector3.up * 5f;
 
-        if ( Physics.Raycast(raycastStartPoint, Vector3.down, out var hit))
+        if (Physics.Raycast(raycastStartPoint, Vector3.down, out var hit))
         {
-
-            Debug.DrawRay(raycastStartPoint, Vector3.down * hit.distance, Color.yellow);
-            footTargetPoint = raycastStartPoint + Vector3.down * hit.distance;
+            FootTargetPosition = raycastStartPoint + Vector3.down * hit.distance;
         }
 
-        footToFootTargetDistance = GetDistance(FootPosition, footTargetPoint);
-        print($"Distance: {footToFootTargetDistance},\nFootPosition: {FootPosition}\nfootTargetPoint: {footTargetPoint}");
-
+        // Do step if distance between foot and target gets too big.
+        var footToFootTargetDistance = GetDistance(FootPosition, FootTargetPosition);
+        if (footToFootTargetDistance > StepLength)
+        {
+            FootPosition = Vector3.MoveTowards(FootPosition, FootTargetPosition, StepLength);
+        }
     }
 
     Vector3 GetMidPoint(Vector3 firstPoint, Vector3 secondPoint)
     {
-        var x = (firstPoint.x + secondPoint.x) / 2; 
-        var y = (firstPoint.y + secondPoint.y) / 2; 
+        var x = (firstPoint.x + secondPoint.x) / 2;
+        var y = (firstPoint.y + secondPoint.y) / 2;
         var z = (firstPoint.z + secondPoint.z) / 2;
 
-        return new Vector3(x,y,z);
+        return new Vector3(x, y, z);
     }
 
     // h = sqrt(a^2 – (b^2/4))
@@ -115,7 +116,7 @@ public class Leg : MonoBehaviour
         Gizmos.color = Color.black;
         Gizmos.DrawSphere(FootPosition, gizmosJointSize); // Draw end of arm with black
         Gizmos.DrawSphere(BodyJointPosition, gizmosJointSize); // Draw static joint attached to the creature body
-        Gizmos.DrawLine(FootPosition, footTargetPoint); // Draw line between foot and its target
+        Gizmos.DrawLine(FootPosition, FootTargetPosition); // Draw line between foot and its target
 
         // Connect the joints with lines
         Gizmos.DrawLine(BodyJointPosition, armJointPosition);
@@ -123,6 +124,6 @@ public class Leg : MonoBehaviour
 
         // Draw legs target
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(footTargetPoint, gizmosJointSize);
+        Gizmos.DrawSphere(FootTargetPosition, gizmosJointSize);
     }
 }

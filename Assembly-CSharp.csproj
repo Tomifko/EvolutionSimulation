@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Leg.cs" />
-    <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
     <Compile Include="Assets\Scripts\ProceduralLegController.cs" />
     <Compile Include="Assets\Scripts\SpawnFood.cs" />
     <Compile Include="Assets\Scripts\AnimalController.cs" />
