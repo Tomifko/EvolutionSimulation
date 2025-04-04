@@ -5,6 +5,7 @@ public class Leg : MonoBehaviour
     public GameObject CreatureBody;
     public float LegSegmentLength = 1.0f;
     public float StepLength = 1.0f;
+    public float TargetDistance = 0.5f;
 
     public Vector3 FootTargetPosition { get; private set; }
     public Vector3 FootPosition { get; private set; }
@@ -13,28 +14,32 @@ public class Leg : MonoBehaviour
     private Vector3 KneePosition { get; set; }
 
     private GameObject UpperLegSegment;
+    private GameObject LowerLegSegment;
+
     private const float GizmosJointSize = 0.1f;
 
     void Start()
     {
         InitializeFootPositions();
         RecalculateIK();
-        UpperLegSegment = CreateLegSegment("Upper_Leg_1");
+
+        UpperLegSegment = CreateLegSegment("Upper_Leg_1", 0.2f, HipPosition, KneePosition);
+        LowerLegSegment = CreateLegSegment("Lower_Leg_1", 0.15f, KneePosition, FootPosition);
+
+        UpperLegSegment.transform.SetParent(transform);
+        LowerLegSegment.transform.SetParent(transform);
     }
 
     void Update()
     {
         RecalculateIK();
         UpdateLegVisuals();
-
-        float legSegmentLength = Vector3.Distance(HipPosition, KneePosition) / 2;
-        print(legSegmentLength);
     }
 
     private void InitializeFootPositions()
     {
         FootPosition = CreatureBody.transform.position + new Vector3(2f, 0f, 0f);
-        FootTargetPosition = FootPosition + new Vector3(0f, 0f, 0.75f);
+        FootTargetPosition = FootPosition + new Vector3(0f, 0f, TargetDistance);
         RecalculateIK();
     }
 
@@ -69,21 +74,30 @@ public class Leg : MonoBehaviour
 
     private void UpdateLegVisuals()
     {
-        Vector3 upperLegPosition = GetMidPoint(HipPosition, KneePosition);
-        UpperLegSegment.transform.position = upperLegPosition;
-        UpperLegSegment.transform.LookAt(HipPosition);
-        UpperLegSegment.transform.Rotate(90f, 0f, 0f);
+        // Update upper leg segment 
+        UpdateLegSegmentVisual(UpperLegSegment, HipPosition, KneePosition);
+
+        // Update lower leg segment 
+        UpdateLegSegmentVisual(LowerLegSegment, KneePosition, FootPosition);
     }
 
-    private GameObject CreateLegSegment(string name)
+    private void UpdateLegSegmentVisual(GameObject legSegment, Vector3 upperJoint, Vector3 lowerJoint)
+    {
+        Vector3 legPosition = GetMidPoint(upperJoint, lowerJoint);
+        legSegment.transform.position = legPosition;
+        legSegment.transform.LookAt(upperJoint);
+        legSegment.transform.Rotate(90f, 0f, 0f);
+    }
+
+    private GameObject CreateLegSegment(string name, float thickness, Vector3 upperJoint, Vector3 lowerJoint)
     {
 
-        GameObject segment = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        GameObject segment = GameObject.CreatePrimitive(PrimitiveType.Cube);
         segment.name = name;
         Destroy(segment.GetComponent<Collider>());
 
-        float legSegmentLength = Vector3.Distance(HipPosition, KneePosition) / 2; // Divide in half, because the leg segment object is symetrically expanding to the both directions
-        segment.transform.localScale = new Vector3(0.1f, legSegmentLength, 0.1f);
+        float legSegmentLength = Vector3.Distance(upperJoint, lowerJoint);
+        segment.transform.localScale = new Vector3(thickness, legSegmentLength, thickness);
         return segment;
     }
 
