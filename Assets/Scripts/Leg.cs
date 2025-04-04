@@ -3,70 +3,65 @@ using UnityEngine;
 public class Leg : MonoBehaviour
 {
     public GameObject CreatureBody;
-    public Vector3 BodyJointPosition => new(CreatureBody.transform.position.x + (CreatureBody.transform.localScale.x / 2),
-                                              CreatureBody.transform.position.y + (CreatureBody.transform.localScale.y / 2),
-                                              CreatureBody.transform.position.z);
-    public Vector3 FootPosition;
-    public Vector3 FootTargetPosition;
     public float LegSegmentLength = 1.0f;
     public float StepLength = 1.0f;
 
-    private Vector3 armJointPosition;
-    private Vector3 bodyJointArmEndMidPoint;
-    private float gizmosJointSize = 0.1f;
+    public Vector3 FootTargetPosition { get; private set; }
+    public Vector3 FootPosition { get; private set; }
 
-    private Vector3 UpperLegSegmentPosition;
-    private Vector3 LowerLegSegmentPosition;
+    private Vector3 HipPosition => CreatureBody.transform.position + new Vector3(CreatureBody.transform.localScale.x / 2, CreatureBody.transform.localScale.y / 2, 0);
+    private Vector3 KneePosition { get; set; }
+
     private GameObject UpperLegSegment;
+    private const float GizmosJointSize = 0.1f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        FootPosition = new(CreatureBody.transform.position.x + 2f,
-                             0f,
-                             CreatureBody.transform.position.z);
-
-        // Calculate position of the LegTargetPoint
-        FootTargetPosition = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
-
+        InitializeFootPositions();
         RecalculateIK();
         UpperLegSegment = CreateLegSegment("Upper_Leg_1");
     }
 
-    // Update is called once per frame
     void Update()
     {
         RecalculateIK();
         UpdateLegVisuals();
+
+        float legSegmentLength = Vector3.Distance(HipPosition, KneePosition) / 2;
+        print(legSegmentLength);
     }
 
-    void RecalculateIK()
+    private void InitializeFootPositions()
     {
-        // Get midpoint on triangle base
-        bodyJointArmEndMidPoint = GetMidPoint(BodyJointPosition, FootPosition);
+        FootPosition = CreatureBody.transform.position + new Vector3(2f, 0f, 0f);
+        FootTargetPosition = FootPosition + new Vector3(0f, 0f, 0.75f);
+        RecalculateIK();
+    }
 
-        // Midpoint + HeightOfIsoscelesTriangle = position of the arm joint
-        var baseLength = GetDistance(BodyJointPosition, FootPosition);
-        armJointPosition = new Vector3(bodyJointArmEndMidPoint.x,
-                                       bodyJointArmEndMidPoint.y + GetHeightOfIsoscelesTriangle(LegSegmentLength, baseLength),
-                                       bodyJointArmEndMidPoint.z);
+    private void RecalculateIK()
+    {
+        Vector3 midPoint = GetMidPoint(HipPosition, FootPosition);
+        float baseLength = Vector3.Distance(HipPosition, FootPosition);
+        KneePosition = midPoint + Vector3.up * GetHeightOfIsoscelesTriangle(LegSegmentLength, baseLength);
 
-        var targetOffsetVector = new Vector3(2f, 0f, 0.75f);
+        UpdateFootTargetPosition();
+        MoveFootTowardsTarget();
+    }
 
-        // Raycast from from legTargetPoint, to move it up/down
-        var raycastStartPoint = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up)
-            * targetOffsetVector
-            + new Vector3(CreatureBody.transform.position.x, 0, CreatureBody.transform.position.z)
-            + Vector3.up * 5f;
+    private void UpdateFootTargetPosition()
+    {
+        Vector3 targetOffset = new Vector3(2f, 0f, 0.75f);
+        Vector3 raycastStart = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up) * targetOffset + CreatureBody.transform.position + Vector3.up * 5f;
 
-        if (Physics.Raycast(raycastStartPoint, Vector3.down, out var hit))
+        if (Physics.Raycast(raycastStart, Vector3.down, out RaycastHit hit))
         {
-            FootTargetPosition = raycastStartPoint + Vector3.down * hit.distance;
+            FootTargetPosition = raycastStart + Vector3.down * hit.distance;
         }
+    }
 
-        // Do step if distance between foot and target gets too big.
-        var footToFootTargetDistance = GetDistance(FootPosition, FootTargetPosition);
-        if (footToFootTargetDistance > StepLength)
+    private void MoveFootTowardsTarget()
+    {
+        if (Vector3.Distance(FootPosition, FootTargetPosition) > StepLength)
         {
             FootPosition = Vector3.MoveTowards(FootPosition, FootTargetPosition, StepLength);
         }
@@ -74,83 +69,59 @@ public class Leg : MonoBehaviour
 
     private void UpdateLegVisuals()
     {
-        // Update the leg visuals
-        UpperLegSegment.transform.position = UpperLegSegmentPosition;
-        UpperLegSegment.transform.LookAt(BodyJointPosition);
+        Vector3 upperLegPosition = GetMidPoint(HipPosition, KneePosition);
+        UpperLegSegment.transform.position = upperLegPosition;
+        UpperLegSegment.transform.LookAt(HipPosition);
         UpperLegSegment.transform.Rotate(90f, 0f, 0f);
     }
-    GameObject CreateLegSegment(string name)
+
+    private GameObject CreateLegSegment(string name)
     {
-        print($"{nameof(Leg)}_{nameof(CreateLegSegment)}");
 
         GameObject segment = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         segment.name = name;
-        Destroy(segment.GetComponent<Collider>()); // Remove collider for simplicity
+        Destroy(segment.GetComponent<Collider>());
 
-        // We will scale and position these later
-        var legSegmentLength = GetDistance(BodyJointPosition, armJointPosition);
-        print(legSegmentLength);
-        segment.transform.localScale = new Vector3(0.1f, legSegmentLength, 0.1f); // Default thickness, height set later
+        float legSegmentLength = Vector3.Distance(HipPosition, KneePosition) / 2; // Divide in half, because the leg segment object is symetrically expanding to the both directions
+        segment.transform.localScale = new Vector3(0.1f, legSegmentLength, 0.1f);
         return segment;
     }
 
-    Vector3 GetMidPoint(Vector3 firstPoint, Vector3 secondPoint)
-    {
-        var x = (firstPoint.x + secondPoint.x) / 2;
-        var y = (firstPoint.y + secondPoint.y) / 2;
-        var z = (firstPoint.z + secondPoint.z) / 2;
-
-        return new Vector3(x, y, z);
-    }
+    private Vector3 GetMidPoint(Vector3 firstPoint, Vector3 secondPoint) 
+        => (firstPoint + secondPoint) / 2;
 
     // h = sqrt(a^2 – (b^2/4))
     // h - height
     // a - equal sides length
     // b - base length
-    float GetHeightOfIsoscelesTriangle(float sideLength, float baseLength)
-    {
-        return Mathf.Sqrt(sideLength * sideLength - (baseLength * baseLength / 4));
-    }
+    private float GetHeightOfIsoscelesTriangle(float sideLength, float baseLength) 
+        => Mathf.Sqrt(sideLength * sideLength - (baseLength * baseLength / 4));
 
-    // d = Sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
-    float GetDistance(Vector3 firstPoint, Vector3 secondPoint)
-    {
-        var dstX = Mathf.Abs(firstPoint.x - secondPoint.x);
-        var dstY = Mathf.Abs(firstPoint.y - secondPoint.y);
-        var dstZ = Mathf.Abs(firstPoint.z - secondPoint.z);
-
-        var sum = dstX * dstX + dstY * dstY + dstZ * dstZ;
-        var d = Mathf.Sqrt(sum);
-        return d;
-    }
-
-    void OnDrawGizmos()
+    private void OnDrawGizmos()
     {
         // Draw midpoint on the base of the triangle
         Gizmos.color = Color.blue;
-        Gizmos.DrawSphere(bodyJointArmEndMidPoint, gizmosJointSize);
+        Gizmos.DrawSphere(GetMidPoint(HipPosition, FootPosition), GizmosJointSize);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(armJointPosition, gizmosJointSize); // Draw arm joint
+        Gizmos.DrawSphere(KneePosition, GizmosJointSize); // Draw knee joint
 
         Gizmos.color = Color.black;
-        Gizmos.DrawSphere(FootPosition, gizmosJointSize); // Draw end of arm with black
-        Gizmos.DrawSphere(BodyJointPosition, gizmosJointSize); // Draw static joint attached to the creature body
+        Gizmos.DrawSphere(FootPosition, GizmosJointSize); // Draw end of arm with black
+        Gizmos.DrawSphere(HipPosition, GizmosJointSize); // Draw static joint attached to the creature body
         Gizmos.DrawLine(FootPosition, FootTargetPosition); // Draw line between foot and its target
 
         // Connect the joints with lines
-        Gizmos.DrawLine(BodyJointPosition, armJointPosition);
-        Gizmos.DrawLine(armJointPosition, FootPosition);
+        Gizmos.DrawLine(HipPosition, KneePosition);
+        Gizmos.DrawLine(KneePosition, FootPosition);
 
         // Draw legs target
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(FootTargetPosition, gizmosJointSize);
+        Gizmos.DrawSphere(FootTargetPosition, GizmosJointSize);
 
         // Get midpoints between joins, so we can position the leg segments
         Gizmos.color = Color.yellow;
-        UpperLegSegmentPosition = GetMidPoint(BodyJointPosition, armJointPosition);
-        Gizmos.DrawSphere(UpperLegSegmentPosition, gizmosJointSize);
-        LowerLegSegmentPosition = GetMidPoint(armJointPosition, FootPosition);
-        Gizmos.DrawSphere(LowerLegSegmentPosition, gizmosJointSize);
+        Gizmos.DrawSphere(GetMidPoint(HipPosition, KneePosition), GizmosJointSize);
+        Gizmos.DrawSphere(GetMidPoint(KneePosition, FootPosition), GizmosJointSize);
     }
 }
