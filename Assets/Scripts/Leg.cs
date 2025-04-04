@@ -15,6 +15,9 @@ public class Leg : MonoBehaviour
     private Vector3 bodyJointArmEndMidPoint;
     private float gizmosJointSize = 0.1f;
 
+    private Vector3 UpperLegSegmentPosition;
+    private Vector3 LowerLegSegmentPosition;
+    private GameObject UpperLegSegment;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -26,23 +29,18 @@ public class Leg : MonoBehaviour
         // Calculate position of the LegTargetPoint
         FootTargetPosition = new Vector3(CreatureBody.transform.position.x + 2f, 0, CreatureBody.transform.position.z + 0.75f);
 
-        //var leg = CreateLegSegment("Leg1");
-        //GameObject.Instantiate(leg);
+        RecalculateIK();
+        UpperLegSegment = CreateLegSegment("Upper_Leg_1");
     }
-
-    //GameObject CreateLegSegment(string name)
-    //{
-    //    GameObject segment = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-    //    segment.name = name;
-    //    Destroy(segment.GetComponent<Collider>()); // Remove collider for simplicity
-
-    //    // We will scale and position these later
-    //    segment.transform.localScale = new Vector3(0.1f, 1.0f, 0.1f); // Default thickness, height set later
-    //    return segment;
-    //}
 
     // Update is called once per frame
     void Update()
+    {
+        RecalculateIK();
+        UpdateLegVisuals();
+    }
+
+    void RecalculateIK()
     {
         // Get midpoint on triangle base
         bodyJointArmEndMidPoint = GetMidPoint(BodyJointPosition, FootPosition);
@@ -72,6 +70,28 @@ public class Leg : MonoBehaviour
         {
             FootPosition = Vector3.MoveTowards(FootPosition, FootTargetPosition, StepLength);
         }
+    }
+
+    private void UpdateLegVisuals()
+    {
+        // Update the leg visuals
+        UpperLegSegment.transform.position = UpperLegSegmentPosition;
+        UpperLegSegment.transform.LookAt(BodyJointPosition);
+        UpperLegSegment.transform.Rotate(90f, 0f, 0f);
+    }
+    GameObject CreateLegSegment(string name)
+    {
+        print($"{nameof(Leg)}_{nameof(CreateLegSegment)}");
+
+        GameObject segment = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        segment.name = name;
+        Destroy(segment.GetComponent<Collider>()); // Remove collider for simplicity
+
+        // We will scale and position these later
+        var legSegmentLength = GetDistance(BodyJointPosition, armJointPosition);
+        print(legSegmentLength);
+        segment.transform.localScale = new Vector3(0.1f, legSegmentLength, 0.1f); // Default thickness, height set later
+        return segment;
     }
 
     Vector3 GetMidPoint(Vector3 firstPoint, Vector3 secondPoint)
@@ -125,5 +145,12 @@ public class Leg : MonoBehaviour
         // Draw legs target
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(FootTargetPosition, gizmosJointSize);
+
+        // Get midpoints between joins, so we can position the leg segments
+        Gizmos.color = Color.yellow;
+        UpperLegSegmentPosition = GetMidPoint(BodyJointPosition, armJointPosition);
+        Gizmos.DrawSphere(UpperLegSegmentPosition, gizmosJointSize);
+        LowerLegSegmentPosition = GetMidPoint(armJointPosition, FootPosition);
+        Gizmos.DrawSphere(LowerLegSegmentPosition, gizmosJointSize);
     }
 }
