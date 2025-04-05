@@ -119,6 +119,56 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &18912577
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 18912578}
+  - component: {fileID: 18912579}
+  m_Layer: 0
+  m_Name: LegRight_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &18912578
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 18912577}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1169207106}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &18912579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 18912577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c8d10628da1035438a1f9c86a87c2a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CreatureBody: {fileID: 1169207102}
+  LegSegmentLength: 1.5
+  StepLength: 1
+  TargetDistance: 0.5
+  HipJointZOffset: -0.25
+  LegSide: 0
 --- !u!1 &157207112
 GameObject:
   m_ObjectHideFlags: 0
@@ -408,6 +458,56 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2004122405}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &808422089
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 808422090}
+  - component: {fileID: 808422091}
+  m_Layer: 0
+  m_Name: LegLeft_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &808422090
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 808422089}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1169207106}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &808422091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 808422089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c8d10628da1035438a1f9c86a87c2a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CreatureBody: {fileID: 1169207102}
+  LegSegmentLength: 1.5
+  StepLength: 1
+  TargetDistance: 0.5
+  HipJointZOffset: -0.25
+  LegSide: -1
 --- !u!1 &856661079
 GameObject:
   m_ObjectHideFlags: 0
@@ -545,12 +645,12 @@ GameObject:
   - component: {fileID: 947843320}
   - component: {fileID: 947843319}
   m_Layer: 0
-  m_Name: Leg1
+  m_Name: LegRight_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &947843319
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -564,9 +664,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CreatureBody: {fileID: 1169207102}
-  FootPosition: {x: 2, y: 0, z: 0}
   LegSegmentLength: 1.5
-  footTargetPoint: {x: 0, y: 0, z: 0}
+  StepLength: 1
+  TargetDistance: 0.5
+  HipJointZOffset: 0.25
+  LegSide: 0
 --- !u!4 &947843320
 Transform:
   m_ObjectHideFlags: 0
@@ -689,6 +791,9 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 947843320}
+  - {fileID: 18912578}
+  - {fileID: 1737214689}
+  - {fileID: 808422090}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1304682768
@@ -799,6 +904,56 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1304682768}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1737214688
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1737214689}
+  - component: {fileID: 1737214690}
+  m_Layer: 0
+  m_Name: LegLeft_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1737214689
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1737214688}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1169207106}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1737214690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1737214688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c8d10628da1035438a1f9c86a87c2a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CreatureBody: {fileID: 1169207102}
+  LegSegmentLength: 1.5
+  StepLength: 1
+  TargetDistance: 0.5
+  HipJointZOffset: 0.25
+  LegSide: -1
 --- !u!1 &1823688464
 GameObject:
   m_ObjectHideFlags: 0

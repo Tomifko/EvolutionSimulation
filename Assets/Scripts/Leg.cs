@@ -6,11 +6,19 @@ public class Leg : MonoBehaviour
     public float LegSegmentLength = 1.0f;
     public float StepLength = 1.0f;
     public float TargetDistance = 0.5f;
+    public float HipJointZOffset = 0.0f;
+    public Side LegSide = Side.Right;
 
     public Vector3 FootTargetPosition { get; private set; }
     public Vector3 FootPosition { get; private set; }
 
-    private Vector3 HipPosition => CreatureBody.transform.position + new Vector3(CreatureBody.transform.localScale.x / 2, CreatureBody.transform.localScale.y / 2, 0);
+    // Determine exact position of hip joint based on the side of the body the leg is attached to
+    private Vector3 HipPosition => CreatureBody.transform.position 
+                                    + new Vector3(LegSide == Side.Right 
+                                                      ? CreatureBody.transform.localScale.x / 2
+                                                      : CreatureBody.transform.localScale.x / 2 * -1,
+                                                  CreatureBody.transform.localScale.y / 2,
+                                                  HipJointZOffset);
     private Vector3 KneePosition { get; set; }
 
     private GameObject UpperLegSegment;
@@ -23,9 +31,9 @@ public class Leg : MonoBehaviour
         InitializeFootPositions();
         RecalculateIK();
 
-        UpperLegSegment = CreateLegSegment("Upper_Leg_1", 0.2f, HipPosition, KneePosition);
-        LowerLegSegment = CreateLegSegment("Lower_Leg_1", 0.15f, KneePosition, FootPosition);
-
+        UpperLegSegment = CreateLegSegment($"Upper_{name}", 0.2f, HipPosition, KneePosition);
+        LowerLegSegment = CreateLegSegment($"Lower_{name}", 0.15f, KneePosition, FootPosition);
+        
         UpperLegSegment.transform.SetParent(transform);
         LowerLegSegment.transform.SetParent(transform);
     }
@@ -39,7 +47,7 @@ public class Leg : MonoBehaviour
     private void InitializeFootPositions()
     {
         FootPosition = CreatureBody.transform.position + new Vector3(2f, 0f, 0f);
-        FootTargetPosition = FootPosition + new Vector3(0f, 0f, TargetDistance);
+        FootTargetPosition = FootPosition + new Vector3(0f, 0f, HipJointZOffset);
         RecalculateIK();
     }
 
@@ -55,8 +63,10 @@ public class Leg : MonoBehaviour
 
     private void UpdateFootTargetPosition()
     {
-        Vector3 targetOffset = new Vector3(2f, 0f, 0.75f);
-        Vector3 raycastStart = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up) * targetOffset + CreatureBody.transform.position + Vector3.up * 5f;
+        var targetOffsetScale = 4f;
+        Vector3 targetOffset = new(2f, 0f, HipJointZOffset * targetOffsetScale);
+        Vector3 raycastStart = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up) * targetOffset 
+                                + CreatureBody.transform.position + Vector3.up * 5f;
 
         if (Physics.Raycast(raycastStart, Vector3.down, out RaycastHit hit))
         {
@@ -110,6 +120,12 @@ public class Leg : MonoBehaviour
     // b - base length
     private float GetHeightOfIsoscelesTriangle(float sideLength, float baseLength) 
         => Mathf.Sqrt(sideLength * sideLength - (baseLength * baseLength / 4));
+
+    public enum Side
+    {
+        Right = 1,
+        Left = -1,
+    }
 
     private void OnDrawGizmos()
     {
