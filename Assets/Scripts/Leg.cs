@@ -14,12 +14,11 @@ public class Leg : MonoBehaviour
 
     // Determine exact position of hip joint based on the side of the body the leg is attached to
     private Vector3 HipPosition => CreatureBody.transform.position 
-                                    + new Vector3(LegSide == Side.Right 
-                                                      ? CreatureBody.transform.localScale.x / 2
-                                                      : CreatureBody.transform.localScale.x / 2 * -1,
+                                    + new Vector3(CreatureBody.transform.localScale.x / 2 * DirectionModificator,
                                                   CreatureBody.transform.localScale.y / 2,
                                                   HipJointZOffset);
     private Vector3 KneePosition { get; set; }
+    private int DirectionModificator => LegSide == Side.Right ? 1 : -1;
 
     private GameObject UpperLegSegment;
     private GameObject LowerLegSegment;
@@ -46,9 +45,10 @@ public class Leg : MonoBehaviour
 
     private void InitializeFootPositions()
     {
-        FootPosition = CreatureBody.transform.position + new Vector3(2f, 0f, 0f);
+        FootPosition = CreatureBody.transform.position + new Vector3(2f * DirectionModificator, 0f, 0f);
         FootTargetPosition = FootPosition + new Vector3(0f, 0f, HipJointZOffset);
         RecalculateIK();
+        UpdateFootTargetPosition();
     }
 
     private void RecalculateIK()
@@ -64,7 +64,7 @@ public class Leg : MonoBehaviour
     private void UpdateFootTargetPosition()
     {
         var targetOffsetScale = 4f;
-        Vector3 targetOffset = new(2f, 0f, HipJointZOffset * targetOffsetScale);
+        Vector3 targetOffset = new(2f * DirectionModificator, 0f, HipJointZOffset * targetOffsetScale);
         Vector3 raycastStart = Quaternion.AngleAxis(CreatureBody.transform.eulerAngles.y, Vector3.up) * targetOffset 
                                 + CreatureBody.transform.position + Vector3.up * 5f;
 
@@ -123,8 +123,8 @@ public class Leg : MonoBehaviour
 
     public enum Side
     {
-        Right = 1,
-        Left = -1,
+        Right,
+        Left,
     }
 
     private void OnDrawGizmos()
