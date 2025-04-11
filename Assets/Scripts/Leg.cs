@@ -14,8 +14,8 @@ public class Leg : MonoBehaviour
 
     // Determine exact position of hip joint based on the side of the body the leg is attached to
     private Vector3 HipPosition => CreatureBody.transform.position 
-                                    + new Vector3(CreatureBody.transform.localScale.x / 2 * DirectionModificator,
-                                                  CreatureBody.transform.localScale.y / 2,
+                                    + new Vector3(CreatureBody.transform.localScale.x / 2 * DirectionModificator, // Determine if we're working with right or left leg
+                                                  CreatureBody.transform.localScale.y / 2 * -1, // Attach the leg to the bottom of the creature
                                                   HipJointZOffset);
     private Vector3 KneePosition { get; set; }
     private int DirectionModificator => LegSide == Side.Right ? 1 : -1;
@@ -28,27 +28,29 @@ public class Leg : MonoBehaviour
     void Start()
     {
         InitializeFootPositions();
-        RecalculateIK();
 
-        UpperLegSegment = CreateLegSegment($"Upper_{name}", 0.2f, HipPosition, KneePosition);
-        LowerLegSegment = CreateLegSegment($"Lower_{name}", 0.15f, KneePosition, FootPosition);
-        
-        UpperLegSegment.transform.SetParent(transform);
-        LowerLegSegment.transform.SetParent(transform);
+
+        // Create leg visuals
+        //UpperLegSegment = CreateLegSegment($"Upper_{name}", 0.2f, HipPosition, KneePosition);
+        //LowerLegSegment = CreateLegSegment($"Lower_{name}", 0.15f, KneePosition, FootPosition);
+
+        //UpperLegSegment.transform.SetParent(transform);
+        //LowerLegSegment.transform.SetParent(transform);
     }
 
     void Update()
     {
         RecalculateIK();
-        UpdateLegVisuals();
+        //UpdateLegVisuals();
+        MoveFootTowardsTarget(StepLength);
     }
 
     private void InitializeFootPositions()
     {
-        FootPosition = CreatureBody.transform.position + new Vector3(2f * DirectionModificator, 0f, 0f);
-        FootTargetPosition = FootPosition + new Vector3(0f, 0f, HipJointZOffset);
+        FootTargetPosition = CreatureBody.transform.position + new Vector3(2f * DirectionModificator, 0f, 0f); ;
+        FootPosition = FootTargetPosition;
         RecalculateIK();
-        UpdateFootTargetPosition();
+        SetFootPosition(FootTargetPosition);
     }
 
     private void RecalculateIK()
@@ -56,9 +58,8 @@ public class Leg : MonoBehaviour
         Vector3 midPoint = GetMidPoint(HipPosition, FootPosition);
         float baseLength = Vector3.Distance(HipPosition, FootPosition);
         KneePosition = midPoint + Vector3.up * GetHeightOfIsoscelesTriangle(LegSegmentLength, baseLength);
-
+        
         UpdateFootTargetPosition();
-        MoveFootTowardsTarget();
     }
 
     private void UpdateFootTargetPosition()
@@ -74,14 +75,20 @@ public class Leg : MonoBehaviour
         }
     }
 
-    private void MoveFootTowardsTarget()
+    private void SetFootPosition(Vector3 targetPosition)
     {
-        if (Vector3.Distance(FootPosition, FootTargetPosition) > StepLength)
+        FootPosition = targetPosition;
+    }
+
+    private void MoveFootTowardsTarget(float stepTriggerDistance)
+    {
+        if (Vector3.Distance(FootPosition, FootTargetPosition) > stepTriggerDistance)
         {
-            FootPosition = Vector3.MoveTowards(FootPosition, FootTargetPosition, StepLength);
+            SetFootPosition(Vector3.MoveTowards(FootPosition, FootTargetPosition, StepLength));
         }
     }
 
+    #region Visual stuff
     private void UpdateLegVisuals()
     {
         // Update upper leg segment 
@@ -93,7 +100,8 @@ public class Leg : MonoBehaviour
 
     private void UpdateLegSegmentVisual(GameObject legSegment, Vector3 upperJoint, Vector3 lowerJoint)
     {
-        Vector3 legPosition = GetMidPoint(upperJoint, lowerJoint);
+        Vector3 target = GetMidPoint(upperJoint, lowerJoint);
+        var legPosition = Vector3.Slerp(legSegment.transform.position, target, Time.deltaTime * 10f);
         legSegment.transform.position = legPosition;
         legSegment.transform.LookAt(upperJoint);
         legSegment.transform.Rotate(90f, 0f, 0f);
@@ -110,6 +118,7 @@ public class Leg : MonoBehaviour
         segment.transform.localScale = new Vector3(thickness, legSegmentLength, thickness);
         return segment;
     }
+    #endregion
 
     private Vector3 GetMidPoint(Vector3 firstPoint, Vector3 secondPoint) 
         => (firstPoint + secondPoint) / 2;
