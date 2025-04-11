@@ -20,6 +20,12 @@ public class Leg : MonoBehaviour
     private Vector3 KneePosition { get; set; }
     private int DirectionModificator => LegSide == Side.Right ? 1 : -1;
 
+    private bool isMoving;
+    private Vector3 stepStartPosition;
+    private float stepProgress = 0f;
+    public float StepHeight = 0.5f; // Maximum height of step arc
+    public float StepDuration = 0.3f; // Duration of each step in seconds
+
     private GameObject UpperLegSegment;
     private GameObject LowerLegSegment;
 
@@ -28,7 +34,6 @@ public class Leg : MonoBehaviour
     void Start()
     {
         InitializeFootPositions();
-
 
         // Create leg visuals
         //UpperLegSegment = CreateLegSegment($"Upper_{name}", 0.2f, HipPosition, KneePosition);
@@ -82,9 +87,37 @@ public class Leg : MonoBehaviour
 
     private void MoveFootTowardsTarget(float stepTriggerDistance)
     {
-        if (Vector3.Distance(FootPosition, FootTargetPosition) > stepTriggerDistance)
+        var isStepNecessary = Vector3.Distance(FootPosition, FootTargetPosition) > stepTriggerDistance;
+
+        if (isMoving)
         {
-            SetFootPosition(Vector3.MoveTowards(FootPosition, FootTargetPosition, StepLength));
+            // Increase step progress
+            stepProgress += Time.deltaTime / StepDuration;
+
+            if (stepProgress >= 1f)
+            {
+                // Step is complete
+                SetFootPosition(FootTargetPosition);
+                isMoving = false;
+            }
+            else
+            {
+                // Calculate position along the path using smooth interpolation
+                float horizontalProgress = Mathf.SmoothStep(0f, 1f, stepProgress);
+
+                Vector3 horizontalPosition = Vector3.Lerp(stepStartPosition, FootTargetPosition, horizontalProgress);
+                float verticalOffset = Mathf.Sin(horizontalProgress * Mathf.PI) * StepHeight;
+
+                // Set the new foot position with the vertical arc added
+                SetFootPosition(horizontalPosition + new Vector3(0, verticalOffset, 0));
+            }
+        }
+        else if (isStepNecessary)
+        {
+            // Start a new stepping motion
+            isMoving = true;
+            stepStartPosition = FootPosition;
+            stepProgress = 0f;
         }
     }
 

@@ -169,6 +169,8 @@ MonoBehaviour:
   TargetDistance: 0.5
   HipJointZOffset: -0.25
   LegSide: 0
+  StepHeight: 0.5
+  StepDuration: 0.3
 --- !u!1 &157207112
 GameObject:
   m_ObjectHideFlags: 0
@@ -508,6 +510,8 @@ MonoBehaviour:
   TargetDistance: 0.5
   HipJointZOffset: -0.25
   LegSide: 1
+  StepHeight: 0.5
+  StepDuration: 0.3
 --- !u!1 &856661079
 GameObject:
   m_ObjectHideFlags: 0
@@ -669,6 +673,8 @@ MonoBehaviour:
   TargetDistance: 0.5
   HipJointZOffset: 0.25
   LegSide: 0
+  StepHeight: 0.5
+  StepDuration: 0.3
 --- !u!4 &947843320
 Transform:
   m_ObjectHideFlags: 0
@@ -954,6 +960,8 @@ MonoBehaviour:
   TargetDistance: 0.5
   HipJointZOffset: 0.25
   LegSide: 1
+  StepHeight: 0.5
+  StepDuration: 0.3
 --- !u!1 &1823688464
 GameObject:
   m_ObjectHideFlags: 0
