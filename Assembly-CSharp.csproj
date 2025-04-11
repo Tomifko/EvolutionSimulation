@@ -9,7 +9,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <ProjectGuid>{519D4330-C4BA-7895-6840-68506D28262E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -62,9 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Leg.cs" />
-    <Compile Include="Assets\Scripts\ProceduralLegController.cs" />
     <Compile Include="Assets\Scripts\SpawnFood.cs" />
-    <Compile Include="Assets\Scripts\AnimalController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
